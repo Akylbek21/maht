@@ -4,6 +4,8 @@ import {
   Table, TableHead, TableBody, TableRow, TableCell, Paper, LinearProgress,
   TablePagination, Tooltip, Chip, Divider, InputAdornment
 } from "@mui/material";
+import { useTheme } from "@mui/material/styles";
+import useMediaQuery from "@mui/material/useMediaQuery";
 import RefreshIcon from "@mui/icons-material/Refresh";
 import DownloadIcon from "@mui/icons-material/Download";
 import SearchIcon from "@mui/icons-material/Search";
@@ -14,8 +16,9 @@ import { listRegistrations, type Registration } from "@/api/registrations";
 type Row = Registration & { createdAt?: string; updatedAt?: string };
 
 const CORAL = "#FA5C44";
-const DARK = "#2F2F2F";
+// const DARK = "#2F2F2F";
 
+/* ====== Animations ====== */
 const fadeUp = {
   initial: { opacity: 0, y: 18 },
   animate: { opacity: 1, y: 0, transition: { duration: 0.45, ease: "easeOut" } },
@@ -33,7 +36,46 @@ const rowAnim = {
   exit: { opacity: 0, y: -6, transition: { duration: 0.25 } },
 };
 
+/* ====== Helpers ====== */
+function toCSVExcel(data: Row[]) {
+  const header = [
+    "ID",
+    "Parent",
+    "Student",
+    "Phone",
+    "Grade",
+    "City",
+    "WantsSelectiveSchool",
+    "CreatedAt",
+  ];
+
+  const body = data.map((r) => [
+    r.id ?? "",
+    r.parentFullName ?? "",
+    r.studentFullName ?? "",
+    r.studentPhone ? `="${String(r.studentPhone)}"` : "",
+    r.studentGrade ?? "",
+    r.city ?? "",
+    r.wantsSelectiveSchool ? "Yes" : "No",
+    r.createdAt ?? "",
+  ]);
+
+  const escape = (s: unknown) => {
+    const v = String(s ?? "");
+    const need = /[",\n\r]/.test(v);
+    const safe = v.replace(/"/g, '""');
+    return need ? `"${safe}"` : safe;
+  };
+
+  const sepLine = "sep=,";
+  const rowsCsv = [header, ...body].map((r) => r.map(escape).join(",")).join("\r\n");
+  return "\uFEFF" + sepLine + "\r\n" + rowsCsv; // BOM + CRLF + sep
+}
+
 export default function RegistrationsPage() {
+  const theme = useTheme();
+  const isXs = useMediaQuery(theme.breakpoints.down("sm"));
+
   const [rows, setRows] = React.useState<Row[]>([]);
   const [loading, setLoading] = React.useState(false);
   const [error, setError] = React.useState<string | null>(null);
@@ -73,9 +115,11 @@ export default function RegistrationsPage() {
   }, []);
 
   React.useEffect(() => {
-    const cancel = load();
+    const p = load();
     return () => {
-      if (typeof cancel === "function") cancel();
+      p.then((cancel) => {
+        if (typeof cancel === "function") cancel();
+      }).catch(() => { /* ignore */ });
     };
   }, [load]);
 
@@ -95,43 +139,7 @@ export default function RegistrationsPage() {
     return filtered.slice(start, start + rowsPerPage);
   }, [filtered, page, rowsPerPage]);
 
-  // --- CSV (Excel-friendly)
-  function toCSVExcel(data: Row[]) {
-    const header = [
-      "ID",
-      "Parent",
-      "Student",
-      "Phone",
-      "Grade",
-      "City",
-      "WantsSelectiveSchool",
-      "CreatedAt",
-    ];
-
-    const body = data.map((r) => [
-      r.id ?? "",
-      r.parentFullName ?? "",
-      r.studentFullName ?? "",
-      // сохраняем телефон как текст в Excel
-      r.studentPhone ? `="${String(r.studentPhone)}"` : "",
-      r.studentGrade ?? "",
-      r.city ?? "",
-      r.wantsSelectiveSchool ? "Yes" : "No",
-      r.createdAt ?? "",
-    ]);
-
-    const escape = (s: unknown) => {
-      const v = String(s ?? "");
-      const need = /[",\n\r]/.test(v);
-      const safe = v.replace(/"/g, '""');
-      return need ? `"${safe}"` : safe;
-    };
-
-    const sepLine = "sep=,";
-    const rowsCsv = [header, ...body].map((r) => r.map(escape).join(",")).join("\r\n");
-    return "\uFEFF" + sepLine + "\r\n" + rowsCsv; // BOM + CRLF + sep
-  }
-
+  // --- csv
   function downloadCSV() {
     const csv = toCSVExcel(filtered);
     const blob = new Blob([csv], { type: "text/csv;charset=utf-8;" });
@@ -181,7 +189,7 @@ export default function RegistrationsPage() {
           border: "6px solid transparent",
           background:
             "radial-gradient(900px 300px at 100% 120%, rgba(47,47,47,.03), transparent 40%) #fff",
-          boxShadow: "0 24px 70px rgba(250,92,68,.18)",
+          boxShadow: { xs: "0 12px 28px rgba(250,92,68,.14)", md: "0 24px 70px rgba(250,92,68,.18)" },
           overflow: "hidden",
           "&::before": {
             content: '""',
@@ -216,13 +224,22 @@ export default function RegistrationsPage() {
               "radial-gradient(900px 300px at 0% -20%, rgba(250,92,68,.05), transparent 40%), #fff",
           }}
         >
-          <Typography variant="h5" fontWeight={900} sx={{ letterSpacing: -0.2 }}>
+          <Typography variant={isXs ? "h6" : "h5"} fontWeight={900} sx={{ letterSpacing: -0.2 }}>
             Заявки
           </Typography>
 
-          <Stack direction="row" spacing={1} alignItems="center" flexWrap="wrap">
+          {/* responsive controls */}
+          <Stack
+            direction={{ xs: "column", sm: "row" }}
+            spacing={1}
+            alignItems={{ xs: "stretch", sm: "center" }}
+            justifyContent="flex-end"
+            flexWrap="wrap"
+            sx={{ width: { xs: "100%", sm: "auto" } }}
+          >
             <TextField
               size="small"
+              fullWidth={isXs}
               placeholder="Поиск: имя, телефон, город…"
               value={q}
               onChange={(e) => setQ(e.target.value)}
@@ -235,15 +252,13 @@ export default function RegistrationsPage() {
                 ),
               }}
               sx={{
-                minWidth: { xs: 220, md: 280 },
+                minWidth: { xs: "100%", sm: 240, md: 280 },
                 "& .MuiOutlinedInput-root": {
                   borderRadius: 999,
                   transition: "box-shadow .2s ease, transform .12s ease",
                   boxShadow: "0 8px 24px rgba(0,0,0,.06)",
                   "&:hover": { transform: "translateY(-1px)" },
-                  "&.Mui-focused": {
-                    boxShadow: "0 0 0 4px rgba(250,92,68,.15)",
-                  },
+                  "&.Mui-focused": { boxShadow: "0 0 0 4px rgba(250,92,68,.15)" },
                 },
               }}
             />
@@ -259,6 +274,7 @@ export default function RegistrationsPage() {
                   whileHover={{ scale: 1.04 }}
                   transition={{ type: "spring", stiffness: 300, damping: 18 }}
                   sx={{
+                    alignSelf: { xs: "flex-end", sm: "center" },
                     borderRadius: 999,
                     boxShadow: "0 8px 24px rgba(0,0,0,.06)",
                     "&:hover": { boxShadow: "0 10px 28px rgba(0,0,0,.12)" },
@@ -273,6 +289,7 @@ export default function RegistrationsPage() {
               onClick={downloadCSV}
               variant="contained"
               color="secondary"
+              fullWidth={isXs}
               component={motion.button as any}
               whileTap={{ scale: 0.98 }}
               whileHover={{ y: -1 }}
@@ -290,7 +307,9 @@ export default function RegistrationsPage() {
         </Box>
 
         {/* Top loading bar */}
-        {loading && <LinearProgress sx={{ "& .MuiLinearProgress-bar": { transition: "transform .2s" } }} />}
+        {loading && (
+          <LinearProgress sx={{ "& .MuiLinearProgress-bar": { transition: "transform .2s" } }} />
+        )}
 
         {/* Error stripe */}
         {error && (
@@ -310,8 +329,8 @@ export default function RegistrationsPage() {
           </Stack>
         )}
 
-        {/* Table */}
-        <Box sx={{ px: { xs: 1, md: 2 }, pb: 1, backgroundColor: "#fff" }}>
+        {/* Table (desktop/tablet) */}
+        <Box sx={{ px: { xs: 1, md: 2 }, pb: 1, backgroundColor: "#fff", display: { xs: "none", sm: "block" } }}>
           <Table
             size="small"
             aria-label="Таблица заявок"
@@ -325,8 +344,7 @@ export default function RegistrationsPage() {
                 borderBottomColor: "divider",
               },
               "& tbody tr:hover": {
-                background:
-                  "linear-gradient(90deg, rgba(250,92,68,.06), transparent 60%)",
+                background: "linear-gradient(90deg, rgba(250,92,68,.06), transparent 60%)",
               },
             }}
           >
@@ -344,7 +362,7 @@ export default function RegistrationsPage() {
             </TableHead>
 
             <TableBody component={motion.tbody} variants={tableStagger} initial="initial" animate="animate">
-              {/* skeleton when loading and there’s no data yet */}
+              {/* skeleton */}
               {loading && rows.length === 0 &&
                 Array.from({ length: Math.min(rowsPerPage, 8) }).map((_, i) => (
                   <TableRow key={`sk-${i}`}>
@@ -369,7 +387,7 @@ export default function RegistrationsPage() {
                   </TableRow>
                 ))}
 
-              {/* real rows */}
+              {/* rows */}
               <AnimatePresence initial={false}>
                 {paginated.map((r) => (
                   <TableRow
@@ -381,9 +399,7 @@ export default function RegistrationsPage() {
                     exit="exit"
                     whileHover={{ scale: 1.002 }}
                     transition={{ type: "spring", stiffness: 250, damping: 22 }}
-                    sx={{
-                      "& td": { borderBottomColor: "rgba(0,0,0,0.06)" },
-                    }}
+                    sx={{ "& td": { borderBottomColor: "rgba(0,0,0,0.06)" } }}
                   >
                     <TableCell>{r.id}</TableCell>
                     <TableCell>
@@ -427,12 +443,10 @@ export default function RegistrationsPage() {
                           display: "inline-flex",
                           alignItems: "center",
                           justifyContent: "center",
-                          width: 72,
-                          height: 72,
+                          width: 72, height: 72,
                           borderRadius: "50%",
                           mb: 1.5,
-                          background:
-                            "radial-gradient(400px 120px at 50% 20%, rgba(250,92,68,.12), transparent 40%)",
+                          background: "radial-gradient(400px 120px at 50% 20%, rgba(250,92,68,.12), transparent 40%)",
                           border: `2px dashed ${CORAL}`,
                         }}
                       >
@@ -452,6 +466,90 @@ export default function RegistrationsPage() {
           </Table>
         </Box>
 
+        {/* Mobile list (cards) */}
+        <Box sx={{ display: { xs: "block", sm: "none" }, px: 1, pb: 1, backgroundColor: "#fff" }}>
+          <Stack spacing={1.25}>
+            {loading && rows.length === 0 &&
+              skeletonRows.map((_, i) => (
+                <Box key={`msk-${i}`} sx={{ p: 2, borderRadius: 2, bgcolor: "#fff", boxShadow: "0 6px 20px rgba(0,0,0,.06)" }}>
+                  <Box sx={{ height: 16, mb: 1, borderRadius: 1, bgcolor: "#f1f3f6" }} />
+                  <Box sx={{ height: 14, mb: .8, borderRadius: 1, bgcolor: "#f1f3f6" }} />
+                  <Box sx={{ height: 14, width: "70%", borderRadius: 1, bgcolor: "#f1f3f6" }} />
+                </Box>
+              ))
+            }
+
+            {!loading && paginated.map((r) => (
+              <Box
+                key={r.id ?? `${r.parentFullName}-${r.studentPhone}`}
+                component={motion.div}
+                initial={{ opacity: 0, y: 8 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ duration: .25 }}
+                sx={{
+                  p: 2,
+                  borderRadius: 2,
+                  bgcolor: "#fff",
+                  boxShadow: "0 10px 26px rgba(0,0,0,.08)",
+                  border: "1px solid #f1f3f6",
+                }}
+              >
+                <Stack spacing={1}>
+                  <Stack direction="row" justifyContent="space-between" alignItems="center">
+                    <Typography fontWeight={800}>#{r.id}</Typography>
+                    <Chip size="small" label={r.studentGrade || "—"} sx={{ bgcolor: CORAL, color: "#fff", fontWeight: 700 }} />
+                  </Stack>
+
+                  <Typography variant="body2" sx={{ color: "text.secondary" }}>Ата-ана</Typography>
+                  <Typography fontWeight={600}>{r.parentFullName || "—"}</Typography>
+
+                  <Typography variant="body2" sx={{ color: "text.secondary", mt: .5 }}>Оқушы</Typography>
+                  <Typography>{r.studentFullName || "—"}</Typography>
+
+                  <Stack direction="row" spacing={1} sx={{ mt: .5, flexWrap: "wrap" }}>
+                    <Chip size="small" variant="outlined" label={r.city || "Қала жоқ"} />
+                    <Chip size="small" variant="outlined" label={r.wantsSelectiveSchool ? "Иә" : "Жоқ"} />
+                  </Stack>
+
+                  <Stack direction="row" spacing={1} alignItems="center" sx={{ mt: .5 }}>
+                    <Typography variant="body2" sx={{ color: "text.secondary" }}>Телефон:</Typography>
+                    <Typography variant="body2">{r.studentPhone || "—"}</Typography>
+                  </Stack>
+
+                  <Typography variant="caption" sx={{ color: "text.secondary", mt: .5 }}>
+                    {r.createdAt ? r.createdAt.slice(0,19).replace("T"," ") : "—"}
+                  </Typography>
+                </Stack>
+              </Box>
+            ))}
+
+            {!loading && filtered.length === 0 && (
+              <Box sx={{ p: 3, textAlign: "center", opacity: .9 }}>
+                <Box
+                  sx={{
+                    display: "inline-flex",
+                    alignItems: "center",
+                    justifyContent: "center",
+                    width: 64, height: 64,
+                    borderRadius: "50%",
+                    mb: 1.5,
+                    background: "radial-gradient(400px 120px at 50% 20%, rgba(250,92,68,.12), transparent 40%)",
+                    border: `2px dashed ${CORAL}`,
+                  }}
+                >
+                  <SearchIcon sx={{ color: CORAL }} />
+                </Box>
+                <Typography variant="subtitle1" fontWeight={800} gutterBottom>
+                  Ничего не найдено
+                </Typography>
+                <Typography color="text.secondary" variant="body2">
+                  Измени запрос или обнови список заявок.
+                </Typography>
+              </Box>
+            )}
+          </Stack>
+        </Box>
+
         <Divider />
 
         {/* Footer bar with pagination */}
@@ -461,12 +559,11 @@ export default function RegistrationsPage() {
           initial="initial"
           animate="animate"
           sx={{
-            px: { xs: 1, md: 2 },
+            px: { xs: .5, md: 2 },
             py: 0.5,
             display: "flex",
-            justifyContent: "flex-end",
-            background:
-              "radial-gradient(900px 300px at 100% 120%, rgba(47,47,47,.06), transparent 40%), #fff",
+            justifyContent: { xs: "center", sm: "flex-end" },
+            background: "radial-gradient(900px 300px at 100% 120%, rgba(47,47,47,.06), transparent 40%), #fff",
           }}
         >
           <TablePagination
@@ -480,7 +577,7 @@ export default function RegistrationsPage() {
               setPage(0);
             }}
             rowsPerPageOptions={[10, 20, 50, 100]}
-            labelRowsPerPage="Строк на странице"
+            labelRowsPerPage={isXs ? undefined : "Строк на странице"}
           />
         </Box>
       </Paper>
