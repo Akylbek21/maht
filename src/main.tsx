@@ -5,7 +5,6 @@ import { ThemeProvider, CssBaseline } from '@mui/material'
 import { theme } from './theme'
 import App from './App'
 
-// Глобальные шрифты
 import '@fontsource-variable/dm-sans'
 import '@fontsource/barlow/400.css'
 import '@fontsource/barlow/600.css'
