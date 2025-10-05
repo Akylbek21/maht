@@ -6,15 +6,15 @@ import RegistrationsPage from "./pages/Registrations";
 export default function App() {
     return (
         <Routes>
-            <Route path="/" element={<Navigate to="/qadam-math-2025" replace/>}/>
+            <Route path="/" element={<QadamMath/>}/>
 
-            <Route path="/qadam-math-2025" element={<QadamMath/>}/>
-
-            <Route path="/registrations" element={<RegistrationsPage/>}/>
+            <Route path="/qadam-math-2025" element={<Navigate to="/" replace/>}/>
 
             <Route path="/dauka-admin" element={<RegistrationsPage/>}/>
 
-            <Route path="*" element={<Navigate to="/qadam-math-2025" replace/>}/>
+            <Route path="/registrations" element={<Navigate to="/dauka-admin" replace/>}/>
+
+            <Route path="*" element={<Navigate to="/" replace/>}/>
         </Routes>
     );
 }
