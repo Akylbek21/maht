@@ -39,7 +39,7 @@ const rowAnim = {
 /* ====== Helpers ====== */
 function toCSVExcel(data: Row[]) {
   const header = [
-    "ID",
+    ,
     "Parent",
     "Student",
     "Phone",
@@ -350,7 +350,7 @@ export default function RegistrationsPage() {
           >
             <TableHead>
               <TableRow>
-                <TableCell sx={{ width: 80 }}>ID</TableCell>
+                
                 <TableCell>Ата-ана</TableCell>
                 <TableCell>Оқушы</TableCell>
                 <TableCell>Телефон</TableCell>
@@ -401,7 +401,7 @@ export default function RegistrationsPage() {
                     transition={{ type: "spring", stiffness: 250, damping: 22 }}
                     sx={{ "& td": { borderBottomColor: "rgba(0,0,0,0.06)" } }}
                   >
-                    <TableCell>{r.id}</TableCell>
+                    
                     <TableCell>
                       <Typography fontWeight={600}>{r.parentFullName}</Typography>
                     </TableCell>
