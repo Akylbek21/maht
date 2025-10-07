@@ -31,6 +31,7 @@ import LogoOzat from "../../img/LOGO.webp";
 
 /* ===== CONSTS ===== */
 const LEFT_GUTTER = 44;               // единая «линейка» слева (как у телефона)
+const SHIFT = -35;                      // тонкий сдвиг вправо для значения select
 const CORAL = "#FF6A3D";
 const DARK = "#1F1F22";
 const R = 12;
@@ -62,8 +63,6 @@ const gutterAdornment = (
   <InputAdornment position="start" sx={{ width: LEFT_GUTTER, mr: 0 }} />
 );
 
-
-
 // единый стиль: выравниваем label, helperText, и САМУ линию (:before/:after)
 const inputRowSx: SxProps<Theme> = {
   // текст и label
@@ -77,6 +76,29 @@ const inputRowSx: SxProps<Theme> = {
   "& .MuiInputBase-root::before": { left: LEFT_GUTTER, right: 0, borderBottomColor: "rgba(0,0,0,.23)" },
   "& .MuiInputBase-root:hover:not(.Mui-disabled)::before": { left: LEFT_GUTTER, right: 0, borderBottomColor: `${CORAL}80` },
   "& .MuiInputBase-root::after": { left: LEFT_GUTTER, right: 0, borderBottomColor: CORAL },
+};
+
+// плавающий многострочный label (одинаковый для обоих select)
+const floatingLabelSx = {
+  pointerEvents: "none",
+  left: LEFT_GUTTER,
+  right: 0,
+  whiteSpace: "normal",
+  overflowWrap: "anywhere" as const,
+  lineHeight: 1.2,
+  maxWidth: `calc(100% - ${LEFT_GUTTER}px)`,
+  transform: "translate(0, -12px) scale(0.9)",
+  transformOrigin: "left top",
+};
+
+// общий сдвиг и вертикальные отступы для значения select
+const selectRowSx: SxProps<Theme> = {
+  "& .MuiInputBase-root": { pt: 3.5 }, // место под сжатый label
+  "& .MuiSelect-select": {
+    pt: 1.25,
+    pb: 0.75,
+    pl: `calc(${LEFT_GUTTER}px + ${SHIFT}px)`, // лёгкий сдвиг вправо
+  },
 };
 
 function scrollToId(id: string) {
@@ -336,23 +358,23 @@ export default function QadamMathPage() {
         wantsSelectiveSchool: lead.target === "Иә",
       };
       try {
-  setLoading(true);
-  const res = await createRegistration(payload);
-  setToast({ open: true, msg: `Өтінім қабылданды!`, type: "success" });
-  fireConfetti().catch(() => {});
+        setLoading(true);
+        const res = await createRegistration(payload);
+        setToast({ open: true, msg: `Өтінім қабылданды!`, type: "success" });
+        fireConfetti().catch(() => {});
 
-  // ⬇️ редирект в Telegram (замени TELEGRAM_URL на ваш)
-  setTimeout(() => {
-    window.location.replace(TELEGRAM_URL); // или window.open(TELEGRAM_URL, "_blank", "noopener,noreferrer")
-  }, 200);
+        // ⬇️ редирект в Telegram (замени TELEGRAM_URL на ваш)
+        setTimeout(() => {
+          window.location.replace(TELEGRAM_URL); // или window.open(TELEGRAM_URL, "_blank", "noopener,noreferrer")
+        }, 200);
 
-  setLead((s) => ({ ...s, parent: "", child: "", phone: "" }));
-  scrollToId("register");
-} catch (err: any) {
-  setToast({ open: true, msg: err?.message ?? "Жіберу мүмкін болмады", type: "error" });
-} finally {
-  setLoading(false);
-}
+        setLead((s) => ({ ...s, parent: "", child: "", phone: "" }));
+        scrollToId("register");
+      } catch (err: any) {
+        setToast({ open: true, msg: err?.message ?? "Жіберу мүмкін болмады", type: "error" });
+      } finally {
+        setLoading(false);
+      }
     },
     [lead, validate]
   );
@@ -486,30 +508,26 @@ export default function QadamMathPage() {
       {/* DARK PRIZES CARD */}
       <PrizesCard />
 
-{/* fade-линия на весь контейнер */}
-<Box
-  sx={{
-    my: 3,
-    position: "relative",
-    height: 2,                            // толще, чем 1px, лучше видно
-    mx: { xs: -2, sm: -3 },               // убери это, если не нужен full-bleed
-    zIndex: 1,
-    // запасной однотонный фон (если градиент не будет заметен)
-    backgroundColor: "rgba(0,0,0,.08)",
-    // градиент поверх
-    "&::after": {
-      content: '""',
-      position: "absolute",
-      inset: 0,
-      background:
-        "linear-gradient(90deg, transparent 0%, rgba(0,0,0,.18) 14%, rgba(0,0,0,.18) 86%, transparent 100%)",
-      // делаем чуть «острее» на ретине
-      transform: "scaleY(.8)",
-      transformOrigin: "center",
-    },
-  }}
-/>
-
+      {/* fade-линия на весь контейнер */}
+      <Box
+        sx={{
+          my: 3,
+          position: "relative",
+          height: 2,
+          mx: { xs: -2, sm: -3 },
+          zIndex: 1,
+          backgroundColor: "rgba(0,0,0,.08)",
+          "&::after": {
+            content: '""',
+            position: "absolute",
+            inset: 0,
+            background:
+              "linear-gradient(90deg, transparent 0%, rgba(0,0,0,.18) 14%, rgba(0,0,0,.18) 86%, transparent 100%)",
+            transform: "scaleY(.8)",
+            transformOrigin: "center",
+          },
+        }}
+      />
 
       {/* ABOUT */}
       <Box sx={{ pb: { xs: 3, md: 5 } }}>
@@ -596,59 +614,53 @@ export default function QadamMathPage() {
       </Box>
 
       {/* fade-линия на весь контейнер */}
-<Box
-  sx={{
-    my: 3,
-    position: "relative",
-    height: 2,                            // толще, чем 1px, лучше видно
-    mx: { xs: -2, sm: -3 },               // убери это, если не нужен full-bleed
-    zIndex: 1,
-    // запасной однотонный фон (если градиент не будет заметен)
-    backgroundColor: "rgba(0,0,0,.08)",
-    // градиент поверх
-    "&::after": {
-      content: '""',
-      position: "absolute",
-      inset: 0,
-      background:
-        "linear-gradient(90deg, transparent 0%, rgba(0,0,0,.18) 14%, rgba(0,0,0,.18) 86%, transparent 100%)",
-      // делаем чуть «острее» на ретине
-      transform: "scaleY(.8)",
-      transformOrigin: "center",
-    },
-  }}
-/>
-
+      <Box
+        sx={{
+          my: 3,
+          position: "relative",
+          height: 2,
+          mx: { xs: -2, sm: -3 },
+          zIndex: 1,
+          backgroundColor: "rgba(0,0,0,.08)",
+          "&::after": {
+            content: '""',
+            position: "absolute",
+            inset: 0,
+            background:
+              "linear-gradient(90deg, transparent 0%, rgba(0,0,0,.18) 14%, rgba(0,0,0,.18) 86%, transparent 100%)",
+            transform: "scaleY(.8)",
+            transformOrigin: "center",
+          },
+        }}
+      />
 
       {/* RULES + PRIZES */}
       <Box sx={{ py: { xs: 2, md: 2 } }}>
         <Container disableGutters sx={{ px: { xs: 4, sm: 4 } }}>
           {/* верхняя оранжевая пилюля */}
-        <Box
-  sx={{
-    bgcolor: "#FF6A00",
-    color: "#fff",
-    textAlign: "center",
-    fontWeight: 800,
-    borderRadius: { xs: 4, sm: 4 },
-    px: { xs: 2.5, sm: 3.5 },
-    py: { xs: 1.5, sm: 2 },
-    lineHeight: 1.35,
-    boxShadow: "0 14px 36px rgba(255,106,0,.45)",
-    maxWidth: 360,
-    display: "flex",          // ← было inline-flex
-    width: "fit-content",     // ← чтобы ширина = контенту
-    alignItems: "center",
-    justifyContent: "center",
-    mx: "auto",               // центрирование работает для блочного элемента
-  }}
->
-  <Typography component="div" sx={{ fontSize: { xs: 16, sm: 18 }, fontWeight: 800 }}>
-    Қатысу ережелері мен шарттары
-  </Typography>
-</Box>
-
-
+          <Box
+            sx={{
+              bgcolor: "#FF6A00",
+              color: "#fff",
+              textAlign: "center",
+              fontWeight: 800,
+              borderRadius: { xs: 4, sm: 4 },
+              px: { xs: 2.5, sm: 3.5 },
+              py: { xs: 1.5, sm: 2 },
+              lineHeight: 1.35,
+              boxShadow: "0 14px 36px rgba(255,106,0,.45)",
+              maxWidth: 360,
+              display: "flex",
+              width: "fit-content",
+              alignItems: "center",
+              justifyContent: "center",
+              mx: "auto",
+            }}
+          >
+            <Typography component="div" sx={{ fontSize: { xs: 16, sm: 18 }, fontWeight: 800 }}>
+              Қатысу ережелері мен шарттары
+            </Typography>
+          </Box>
 
           <Typography align="center" sx={{ fontWeight: 800, mt: 4, mb: 2 }}>
             3-4-5 сынып оқушылары қатысады!
@@ -689,7 +701,7 @@ export default function QadamMathPage() {
           </Grid>
 
           {/* нижняя оранжевая пилюля */}
-          <Box sx={{ display: "grid", placeItems: "center",mt: 4, mb: 1 }}>
+          <Box sx={{ display: "grid", placeItems: "center", mt: 4, mb: 1 }}>
             <Box
               sx={{
                 bgcolor: "#FF6A00",
@@ -712,31 +724,27 @@ export default function QadamMathPage() {
           </Box>
         </Container>
       </Box>
-      
-      {/* fade-линия на весь контейнер */}
-<Box
-  sx={{
-    my: 3,
-    position: "relative",
-    height: 2,                            // толще, чем 1px, лучше видно
-    mx: { xs: -2, sm: -3 },               // убери это, если не нужен full-bleed
-    zIndex: 1,
-    // запасной однотонный фон (если градиент не будет заметен)
-    backgroundColor: "rgba(0,0,0,.08)",
-    // градиент поверх
-    "&::after": {
-      content: '""',
-      position: "absolute",
-      inset: 0,
-      background:
-        "linear-gradient(90deg, transparent 0%, rgba(0,0,0,.18) 14%, rgba(0,0,0,.18) 86%, transparent 100%)",
-      // делаем чуть «острее» на ретине
-      transform: "scaleY(.8)",
-      transformOrigin: "center",
-    },
-  }}
-/>
 
+      {/* fade-линия на весь контейнер */}
+      <Box
+        sx={{
+          my: 3,
+          position: "relative",
+          height: 2,
+          mx: { xs: -2, sm: -3 },
+          zIndex: 1,
+          backgroundColor: "rgba(0,0,0,.08)",
+          "&::after": {
+            content: '""',
+            position: "absolute",
+            inset: 0,
+            background:
+              "linear-gradient(90deg, transparent 0%, rgba(0,0,0,.18) 14%, rgba(0,0,0,.18) 86%, transparent 100%)",
+            transform: "scaleY(.8)",
+            transformOrigin: "center",
+          },
+        }}
+      />
 
       {/* REGISTER — карточка с внешней рамкой */}
       <Box id="register" sx={{ py: { xs: 6, md: 9 }, scrollMarginTop: 80 }}>
@@ -771,139 +779,122 @@ export default function QadamMathPage() {
             <Box component="form" noValidate onSubmit={onSubmit} sx={{ p: { xs: 3, md: 4 } }}>
               <Stack spacing={2.4}>
                 {/* ФИО */}
-<TextField
-  variant="standard"
-  inputRef={parentRef}
-  label="Ата-ананың аты-жөні"
-  value={lead.parent}
-  onChange={(e) => setLead((s) => ({ ...s, parent: e.target.value }))}
-  autoComplete="name"
-  required
-  fullWidth
-  placeholder="Ерлан Нұрбекұлы"
-  InputProps={{ startAdornment: gutterAdornment }}
-  sx={inputRowSx}
-/>
+                <TextField
+                  variant="standard"
+                  inputRef={parentRef}
+                  label="Ата-ананың аты-жөні"
+                  value={lead.parent}
+                  onChange={(e) => setLead((s) => ({ ...s, parent: e.target.value }))}
+                  autoComplete="name"
+                  required
+                  fullWidth
+                  placeholder="Ерлан Нұрбекұлы"
+                  InputProps={{ startAdornment: gutterAdornment }}
+                  sx={inputRowSx}
+                />
 
-<TextField
-  variant="standard"
-  inputRef={childRef}
-  label="Баланың аты-жөні"
-  value={lead.child}
-  onChange={(e) => setLead((s) => ({ ...s, child: e.target.value }))}
-  autoComplete="name"
-  required
-  fullWidth
-  placeholder="Айша Ерланқызы"
-  InputProps={{ startAdornment: gutterAdornment }}
-  sx={inputRowSx}
-/>
+                <TextField
+                  variant="standard"
+                  inputRef={childRef}
+                  label="Баланың аты-жөні"
+                  value={lead.child}
+                  onChange={(e) => setLead((s) => ({ ...s, child: e.target.value }))}
+                  autoComplete="name"
+                  required
+                  fullWidth
+                  placeholder="Айша Ерланқызы"
+                  InputProps={{ startAdornment: gutterAdornment }}
+                  sx={inputRowSx}
+                />
 
-{/* Телефон (оставляем KZ, ширина = LEFT_GUTTER, линия тоже сдвинута) */}
-<TextField
-  variant="standard"
-  inputRef={phoneRef}
-  label="Сіздің телефоныңыз"
-  value={lead.phone}
-  onChange={handlePhoneChange}
-  inputMode="tel"
-  autoComplete="tel"
-  required
-  fullWidth
-  placeholder="+7 (000) 000-00-00"
-  InputProps={{
-    startAdornment: (
-      <InputAdornment position="start" sx={{ width: LEFT_GUTTER, mr: 0, justifyContent: "flex-start" }}>
-        <Box sx={{ fontWeight: 700, fontSize: 14, opacity: .85 }}></Box>
-      </InputAdornment>
-    ),
-    inputProps: { inputMode: "tel", pattern: "[0-9]*", autoCapitalize: "off", autoCorrect: "off" },
-  }}
-  helperText="WhatsApp қолжетімді нөмірді көрсетіңіз"
-  sx={inputRowSx}
-/>
+                {/* Телефон */}
+                <TextField
+                  variant="standard"
+                  inputRef={phoneRef}
+                  label="Сіздің телефоныңыз"
+                  value={lead.phone}
+                  onChange={handlePhoneChange}
+                  inputMode="tel"
+                  autoComplete="tel"
+                  required
+                  fullWidth
+                  placeholder="+7 (000) 000-00-00"
+                  InputProps={{
+                    startAdornment: (
+                      <InputAdornment position="start" sx={{ width: LEFT_GUTTER, mr: 0, justifyContent: "flex-start" }}>
+                        <Box sx={{ fontWeight: 700, fontSize: 14, opacity: .85 }}></Box>
+                      </InputAdornment>
+                    ),
+                    inputProps: { inputMode: "tel", pattern: "[0-9]*", autoCapitalize: "off", autoCorrect: "off" },
+                  }}
+                  helperText="WhatsApp қолжетімді нөмірді көрсетіңіз"
+                  sx={inputRowSx}
+                />
 
-{/* Класс */}
-<TextField
-  select
-  variant="standard"
-  label="Бала қай сыныпта оқиды"
-  value={lead.grade}
-  onChange={(e) => setLead((s) => ({ ...s, grade: e.target.value as string }))}
-  required
-  fullWidth
-  InputProps={{ startAdornment: gutterAdornment }}
-  sx={inputRowSx}
->
-  {["3","4","5"].map((g) => <MenuItem key={g} value={g}>{g}</MenuItem>)}
-</TextField>
+                {/* Класс */}
+                <TextField
+                  select
+                  variant="standard"
+                  label="Бала қай сыныпта оқиды"
+                  value={lead.grade}
+                  onChange={(e) => setLead((s) => ({ ...s, grade: e.target.value as string }))}
+                  fullWidth
+                  InputProps={{ startAdornment: gutterAdornment }}
+                  InputLabelProps={{ shrink: true, sx: floatingLabelSx }}
+                  sx={{ ...inputRowSx, ...selectRowSx }}
+                >
+                  {["3", "4", "5"].map((g) => (
+                    <MenuItem key={g} value={g}>{g}</MenuItem>
+                  ))}
+                </TextField>
 
-{/* Қала — Autocomplete с тем же отступом и той же линией */}
-<Autocomplete<CityOption, false, false, false>
-  fullWidth
-  options={CITY_OPTIONS}
-  groupBy={(o) => o.group}
-  getOptionLabel={(o) => o.label}
-  value={CITY_OPTIONS.find((o) => o.label === lead.city) ?? null}
-  isOptionEqualToValue={(a, b) => a.label === b.label}
-  onChange={(_, val) => setLead((s) => ({ ...s, city: val?.label ?? "" }))}
-  autoHighlight blurOnSelect disablePortal includeInputInList handleHomeEndKeys={false}
-  renderInput={(params) => (
-    <TextField
-      {...params}
-      variant="standard"
-      label="Сіз қай қалада тұрасыз?"
-      required
-      sx={inputRowSx}
-      InputProps={{
-        ...params.InputProps,
-        startAdornment: (
-          <>
-            {gutterAdornment}
-            {params.InputProps.startAdornment}
-          </>
-        ),
-      }}
-    />
-  )}
-  popupIcon={null}
-/>
+                {/* Қала — Autocomplete */}
+                <Autocomplete<CityOption, false, false, false>
+                  fullWidth
+                  options={CITY_OPTIONS}
+                  groupBy={(o) => o.group}
+                  getOptionLabel={(o) => o.label}
+                  value={CITY_OPTIONS.find((o) => o.label === lead.city) ?? null}
+                  isOptionEqualToValue={(a, b) => a.label === b.label}
+                  onChange={(_, val) => setLead((s) => ({ ...s, city: val?.label ?? "" }))}
+                  autoHighlight blurOnSelect disablePortal includeInputInList handleHomeEndKeys={false}
+                  renderInput={(params) => (
+                    <TextField
+                      {...params}
+                      variant="standard"
+                      label="Сіз қай қалада тұрасыз?"
+                      required
+                      sx={inputRowSx}
+                      InputProps={{
+                        ...params.InputProps,
+                        startAdornment: (
+                          <>
+                            {gutterAdornment}
+                            {params.InputProps.startAdornment}
+                          </>
+                        ),
+                      }}
+                    />
+                  )}
+                  popupIcon={null}
+                />
 
-{/* Мақсат */}
-<TextField
-  select
-  variant="standard"
-  label={`Балаңыздың еліміздің үздік мектептеріне (НЗМ, БИЛ, РФММ)\nтүсуін қалайсыз ба?`}
-  value={lead.target}
-  onChange={(e) => setLead((s) => ({ ...s, target: e.target.value as LeadState["target"] }))}
-  fullWidth
-  InputProps={{ startAdornment: gutterAdornment }}
-  // переносы + ограничение ширины + аккуратный shrink
-  InputLabelProps={{
-    sx: {
-      left: LEFT_GUTTER,          // как и раньше
-      right: 0,                   // даём месту справа
-      whiteSpace: "pre-wrap",     // перенос + \n поддержка
-      overflowWrap: "anywhere",   // если слово очень длинное
-      lineHeight: 1.15,
-      maxWidth: `calc(100% - ${LEFT_GUTTER}px)`,
-      "&.MuiInputLabel-shrink": {
-        transform: "translate(0, -10px) scale(0.75)", // чуть выше, чтобы не налезало
-        transformOrigin: "left top",
-        lineHeight: 1.2,
-        maxWidth: `calc(100% - ${LEFT_GUTTER}px)`,
-      },
-    },
-  }}
-  sx={inputRowSx}
->
-  {[, "Иә", "Жоқ",].map((o) => (
-    <MenuItem key={o} value={o}>
-      {o}
-    </MenuItem>
-  ))}
-</TextField>
-
+                {/* Мақсат */}
+                <TextField
+                  select
+                  variant="standard"
+                  label="Балаңыздың еліміздің үздік мектептеріне (НЗМ, БИЛ, РФММ) түсуін қалайсыз ба?"
+                  value={lead.target}
+                  onChange={(e) => setLead((s) => ({ ...s, target: e.target.value as LeadState["target"] }))}
+                  fullWidth
+                  InputProps={{ startAdornment: gutterAdornment }}
+                  InputLabelProps={{ shrink: true, sx: floatingLabelSx }}
+                  sx={{ ...inputRowSx, ...selectRowSx }}
+                >
+                  {[, "Иә", "Жоқ",].map((o) => (
+                    <MenuItem key={o} value={o}>{o}</MenuItem>
+                  ))}
+                </TextField>
 
                 {/* Desktop CTA */}
                 <Box sx={{ display: { xs: "none", md: "flex" }, justifyContent: "center" }}>
