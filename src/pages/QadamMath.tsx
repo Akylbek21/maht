@@ -31,7 +31,7 @@ import LogoOzat from "../../img/LOGO.webp";
 
 /* ===== CONSTS ===== */
 const LEFT_GUTTER = 44;               // единая «линейка» слева (как у телефона)
-const SHIFT = -35;                      // тонкий сдвиг вправо для значения select
+const SHIFT = -35;                    // тонкий сдвиг для значения select
 const CORAL = "#FF6A3D";
 const DARK = "#1F1F22";
 const R = 12;
@@ -50,13 +50,16 @@ const CITY_GROUPS = [
       "Түркістан облысы", "Ұлытау облысы",
     ],
   },
-  { label: "Өзге", items: ["Өзге"] },
 ];
 
 type CityOption = { label: string; group: string };
 const CITY_OPTIONS: CityOption[] = CITY_GROUPS.flatMap((g) =>
   g.items.map((i) => ({ label: i, group: g.label }))
 );
+
+// варианты для «Мақсат»
+const TARGET_OPTIONS = ["Иә", "Жоқ",] as const;
+type TargetValue = "" | (typeof TARGET_OPTIONS)[number];
 
 /* ===== HELPERS ===== */
 const gutterAdornment = (
@@ -93,11 +96,11 @@ const floatingLabelSx = {
 
 // общий сдвиг и вертикальные отступы для значения select
 const selectRowSx: SxProps<Theme> = {
-  "& .MuiInputBase-root": { pt: 3.5 }, // место под сжатый label
+  "& .MuiInputBase-root": { pt: 2.25 }, // было 3.5
   "& .MuiSelect-select": {
-    pt: 1.25,
-    pb: 0.75,
-    pl: `calc(${LEFT_GUTTER}px + ${SHIFT}px)`, // лёгкий сдвиг вправо
+    pt: 0.9,     // было 1.25
+    pb: 0.5,     // было 0.75
+    pl: `calc(${LEFT_GUTTER}px + ${SHIFT}px)`,
   },
 };
 
@@ -284,7 +287,7 @@ type LeadState = {
   phone: string;
   grade: string;
   city: string;
-  target: "-" | "Иә" | "Жоқ" | "Әлі білмеймін";
+  target: TargetValue;
 };
 
 /* ===== Page ===== */
@@ -295,9 +298,9 @@ export default function QadamMathPage() {
     parent: "",
     child: "",
     phone: "",
-    grade: "3",
-    city: "Алматы қ.",
-    target: "-",
+    grade: "",
+    city: "",
+    target: "", // пусто по умолчанию
   });
 
   const [loading, setLoading] = React.useState(false);
@@ -325,8 +328,17 @@ export default function QadamMathPage() {
       phoneRef.current?.focus();
       return "Телефон нөмірі дұрыс емес";
     }
+    if (!lead.city?.trim()) {
+      return "Қаланы таңдаңыз";
+    }
+    if (!["3", "4", "5"].includes(lead.grade)) {
+      return "Сыныпты таңдаңыз";
+    }
+    if (!lead.target) {
+      return "Мақсатты таңдаңыз";
+    }
     return null;
-  }, [lead.parent, lead.child, lead.phone]);
+  }, [lead.parent, lead.child, lead.phone, lead.city, lead.grade, lead.target]);
 
   const handlePhoneChange = React.useCallback(
     (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -340,6 +352,15 @@ export default function QadamMathPage() {
     },
     [lead.phone]
   );
+
+  const isFormValid = React.useMemo(() => (
+    !!lead.parent.trim() &&
+    !!lead.child.trim() &&
+    lead.phone.replace(/\D/g, "").length >= 11 &&
+    !!lead.city?.trim() &&
+    ["3", "4", "5"].includes(lead.grade) &&
+    !!lead.target
+  ), [lead]);
 
   const onSubmit = React.useCallback(
     async (e?: React.FormEvent) => {
@@ -359,16 +380,16 @@ export default function QadamMathPage() {
       };
       try {
         setLoading(true);
-        const res = await createRegistration(payload);
+        await createRegistration(payload);
         setToast({ open: true, msg: `Өтінім қабылданды!`, type: "success" });
         fireConfetti().catch(() => {});
 
         // ⬇️ редирект в Telegram (замени TELEGRAM_URL на ваш)
         setTimeout(() => {
-          window.location.replace(TELEGRAM_URL); // или window.open(TELEGRAM_URL, "_blank", "noopener,noreferrer")
+          window.location.replace(TELEGRAM_URL);
         }, 200);
 
-        setLead((s) => ({ ...s, parent: "", child: "", phone: "" }));
+        setLead({ parent: "", child: "", phone: "", grade: "", city: "", target: "" });
         scrollToId("register");
       } catch (err: any) {
         setToast({ open: true, msg: err?.message ?? "Жіберу мүмкін болмады", type: "error" });
@@ -776,7 +797,7 @@ export default function QadamMathPage() {
 
             <Divider />
 
-            <Box component="form" noValidate onSubmit={onSubmit} sx={{ p: { xs: 3, md: 4 } }}>
+            <Box component="form" noValidate onSubmit={onSubmit} autoComplete="off" sx={{ p: { xs: 3, md: 4 } }}>
               <Stack spacing={2.4}>
                 {/* ФИО */}
                 <TextField
@@ -785,11 +806,11 @@ export default function QadamMathPage() {
                   label="Ата-ананың аты-жөні"
                   value={lead.parent}
                   onChange={(e) => setLead((s) => ({ ...s, parent: e.target.value }))}
-                  autoComplete="name"
                   required
                   fullWidth
-                  placeholder="Ерлан Нұрбекұлы"
+                  placeholder="Аты-жөні"
                   InputProps={{ startAdornment: gutterAdornment }}
+                  inputProps={{ autoComplete: "off" }}
                   sx={inputRowSx}
                 />
 
@@ -799,11 +820,11 @@ export default function QadamMathPage() {
                   label="Баланың аты-жөні"
                   value={lead.child}
                   onChange={(e) => setLead((s) => ({ ...s, child: e.target.value }))}
-                  autoComplete="name"
                   required
                   fullWidth
-                  placeholder="Айша Ерланқызы"
+                  placeholder="Аты-жөні"
                   InputProps={{ startAdornment: gutterAdornment }}
+                  inputProps={{ autoComplete: "off" }}
                   sx={inputRowSx}
                 />
 
@@ -815,38 +836,51 @@ export default function QadamMathPage() {
                   value={lead.phone}
                   onChange={handlePhoneChange}
                   inputMode="tel"
-                  autoComplete="tel"
                   required
                   fullWidth
                   placeholder="+7 (000) 000-00-00"
                   InputProps={{
                     startAdornment: (
                       <InputAdornment position="start" sx={{ width: LEFT_GUTTER, mr: 0, justifyContent: "flex-start" }}>
-                        <Box sx={{ fontWeight: 700, fontSize: 14, opacity: .85 }}></Box>
+                        <Box sx={{ fontWeight: 700, fontSize: 14, opacity: .85 }} />
                       </InputAdornment>
                     ),
-                    inputProps: { inputMode: "tel", pattern: "[0-9]*", autoCapitalize: "off", autoCorrect: "off" },
+                    inputProps: { inputMode: "tel", pattern: "[0-9]*", autoCapitalize: "off", autoCorrect: "off", autoComplete: "off" },
                   }}
                   helperText="WhatsApp қолжетімді нөмірді көрсетіңіз"
                   sx={inputRowSx}
                 />
 
                 {/* Класс */}
-                <TextField
-                  select
-                  variant="standard"
-                  label="Бала қай сыныпта оқиды"
-                  value={lead.grade}
-                  onChange={(e) => setLead((s) => ({ ...s, grade: e.target.value as string }))}
-                  fullWidth
-                  InputProps={{ startAdornment: gutterAdornment }}
-                  InputLabelProps={{ shrink: true, sx: floatingLabelSx }}
-                  sx={{ ...inputRowSx, ...selectRowSx }}
-                >
-                  {["3", "4", "5"].map((g) => (
-                    <MenuItem key={g} value={g}>{g}</MenuItem>
-                  ))}
-                </TextField>
+<TextField
+  select
+  required
+  variant="standard"
+  label="Бала қай сыныпта оқиды"
+  value={lead.grade || ""} // пусто, пока не выбрано
+  onChange={(e) => setLead((s) => ({ ...s, grade: e.target.value as string }))}
+  fullWidth
+  InputProps={{ startAdornment: gutterAdornment }}
+  InputLabelProps={{ shrink: true, sx: floatingLabelSx }}
+  SelectProps={{
+    displayEmpty: true,
+    renderValue: (v) => (v ? (v as string) : ""), // не показывает placeholder как значение
+  }}
+  sx={{
+    ...inputRowSx,
+    ...selectRowSx,
+    // компактнее сверху
+    "& .MuiInputBase-root": { pt: 0 },            // было 3.5 в selectRowSx
+    "& .MuiSelect-select": { pt: 0.8, pb: 0.5, pl: `calc(${LEFT_GUTTER}px + ${SHIFT}px)` },
+  }}
+  error={false}
+>
+  <MenuItem value="" disabled>Таңдаңыз…</MenuItem>
+  {["3", "4", "5"].map((g) => (
+    <MenuItem key={g} value={g}>{g}</MenuItem>
+  ))}
+</TextField>
+
 
                 {/* Қала — Autocomplete */}
                 <Autocomplete<CityOption, false, false, false>
@@ -864,7 +898,7 @@ export default function QadamMathPage() {
                       variant="standard"
                       label="Сіз қай қалада тұрасыз?"
                       required
-                      sx={inputRowSx}
+                      error={false}                      sx={inputRowSx}
                       InputProps={{
                         ...params.InputProps,
                         startAdornment: (
@@ -874,6 +908,7 @@ export default function QadamMathPage() {
                           </>
                         ),
                       }}
+                      inputProps={{ ...params.inputProps, autoComplete: "new-password" }}
                     />
                   )}
                   popupIcon={null}
@@ -882,16 +917,18 @@ export default function QadamMathPage() {
                 {/* Мақсат */}
                 <TextField
                   select
+                  required
                   variant="standard"
                   label="Балаңыздың еліміздің үздік мектептеріне (НЗМ, БИЛ, РФММ) түсуін қалайсыз ба?"
                   value={lead.target}
-                  onChange={(e) => setLead((s) => ({ ...s, target: e.target.value as LeadState["target"] }))}
+                  onChange={(e) => setLead((s) => ({ ...s, target: e.target.value as TargetValue }))}
                   fullWidth
                   InputProps={{ startAdornment: gutterAdornment }}
                   InputLabelProps={{ shrink: true, sx: floatingLabelSx }}
                   sx={{ ...inputRowSx, ...selectRowSx }}
-                >
-                  {[, "Иә", "Жоқ",].map((o) => (
+                  error={false}                >
+                  <MenuItem value="" disabled>Таңдаңыз…</MenuItem>
+                  {TARGET_OPTIONS.map((o) => (
                     <MenuItem key={o} value={o}>{o}</MenuItem>
                   ))}
                 </TextField>
@@ -902,7 +939,7 @@ export default function QadamMathPage() {
                     type="submit"
                     size="large"
                     variant="contained"
-                    disabled={loading}
+                    disabled={loading || !isFormValid}
                     sx={{ bgcolor: CORAL, "&:hover": { bgcolor: "#F35F34" }, px: 5, minHeight: 52, borderRadius: 999 }}
                   >
                     {loading ? <CircularProgress size={22} sx={{ color: "#fff" }} /> : "Тіркелу"}
@@ -938,7 +975,7 @@ export default function QadamMathPage() {
                   type="submit"
                   size="large"
                   variant="contained"
-                  disabled={loading}
+                  disabled={loading || !isFormValid}
                   sx={{ bgcolor: CORAL, "&:hover": { bgcolor: "#F35F34" }, minHeight: 52, borderRadius: 999 }}
                 >
                   {loading ? <CircularProgress size={22} sx={{ color: "#fff" }} /> : "Тіркелу"}
