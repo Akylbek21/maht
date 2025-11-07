@@ -9,8 +9,9 @@ import CertificatesPage from "./pages/Certificates";
 export default function App() {
     return (
         <Routes>
+            <Route path="/" element={<Navigate to="/certificates" replace/>}/>
 
-            <Route path="/qadam-math-2025" element={<Navigate to="/" replace/>}/>
+            <Route path="/qadam-math-2025" element={<Navigate to="/certificates" replace/>}/>
 
             <Route path="/dauka-admin" element={<RegistrationsPage/>}/>
 
@@ -18,7 +19,7 @@ export default function App() {
 
             <Route path="/registrations" element={<Navigate to="/dauka-admin" replace/>}/>
 
-            <Route path="*" element={<Navigate to="/" replace/>}/>
+            <Route path="*" element={<Navigate to="/certificates" replace/>}/>
         </Routes>
     );
 }
