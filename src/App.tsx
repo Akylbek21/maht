@@ -1,6 +1,6 @@
 import * as React from "react";
 import {Routes, Route, Navigate} from "react-router-dom";
-import QadamMath from "./pages/QadamMath";
+
 import RegistrationsPage from "./pages/Registrations";
 import CertificatesPage from "./pages/Certificates";
 
@@ -9,7 +9,6 @@ import CertificatesPage from "./pages/Certificates";
 export default function App() {
     return (
         <Routes>
-            <Route path="/" element={<QadamMath/>}/>
 
             <Route path="/qadam-math-2025" element={<Navigate to="/" replace/>}/>
 
