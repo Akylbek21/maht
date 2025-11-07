@@ -20,6 +20,9 @@ export interface RegistrationResponse extends RegistrationRequest {
   // Бэк может добавить: createdAt/updatedAt и т.п.
 }
 
+/** Алиас для совместимости */
+export type Registration = RegistrationResponse;
+
 /** Универсальная ошибка API с полезными полями */
 export class ApiError extends Error {
   status: number;
@@ -52,7 +55,7 @@ async function parseJsonSafe(res: Response) {
 /**
  * Единая обёртка над fetch с таймаутом, парсингом JSON и выбросом ApiError.
  */
-async function request<T>(
+export async function request<T>(
   path: string,
   init: RequestInit & { timeoutMs?: number } = {}
 ): Promise<T> {

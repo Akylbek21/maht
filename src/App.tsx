@@ -2,6 +2,7 @@ import * as React from "react";
 import {Routes, Route, Navigate} from "react-router-dom";
 import QadamMath from "./pages/QadamMath";
 import RegistrationsPage from "./pages/Registrations";
+import CertificatesPage from "./pages/Certificates";
 
 
 
@@ -13,6 +14,8 @@ export default function App() {
             <Route path="/qadam-math-2025" element={<Navigate to="/" replace/>}/>
 
             <Route path="/dauka-admin" element={<RegistrationsPage/>}/>
+
+            <Route path="/certificates" element={<CertificatesPage/>}/>
 
             <Route path="/registrations" element={<Navigate to="/dauka-admin" replace/>}/>
 
