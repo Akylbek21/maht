@@ -1,9 +1,9 @@
 // src/api/certificates.ts
-// API клиент для работы с сертификатами
+// Сертификаттармен жұмыс істеу үшін API клиенті
 
 import { API_BASE, ApiError, request, type RegistrationResponse } from "./registrations";
 
-/** Параметры поиска сертификата */
+/** Сертификат іздеу параметрлері */
 export interface CertificateSearchParams {
   lastName?: string;
   firstName?: string;
@@ -12,7 +12,7 @@ export interface CertificateSearchParams {
   phone?: string;
 }
 
-/** Регистрация (расширяем RegistrationResponse для сертификатов) */
+/** Тіркелгі (сертификаттар үшін RegistrationResponse кеңейтілген) */
 export interface Registration extends RegistrationResponse {
   iin?: string;
   createdAt?: string;
@@ -20,7 +20,7 @@ export interface Registration extends RegistrationResponse {
 }
 
 /**
- * Поиск регистраций для генерации сертификата
+ * Сертификат генерациялау үшін тіркелгілерді іздеу
  * GET /api/v1/certificates/search
  */
 export async function searchCertificates(
@@ -42,7 +42,7 @@ export async function searchCertificates(
 
   const queryString = queryParams.toString();
   if (!queryString) {
-    throw new ApiError(400, "Необходимо указать один из параметров: fullName, lastName+firstName, iin или phone");
+    throw new ApiError(400, "Параметрлердің бірін көрсету қажет: fullName, lastName+firstName, iin немесе phone");
   }
 
   return request<Registration | Registration[]>(`/certificates/search?${queryString}`, {
@@ -52,7 +52,7 @@ export async function searchCertificates(
 }
 
 /**
- * Скачать сертификат по ID регистрации
+ * Тіркелгі ID бойынша сертификатты жүктеп алу
  * GET /api/v1/certificates/download?id=1
  */
 export async function downloadCertificate(
@@ -60,7 +60,7 @@ export async function downloadCertificate(
   signal?: AbortSignal
 ): Promise<Blob> {
   const controller = new AbortController();
-  const timeout = setTimeout(() => controller.abort(), 30000); // 30 секунд для PDF
+  const timeout = setTimeout(() => controller.abort(), 30000); // PDF үшін 30 секунд
 
   const signals: AbortSignal[] = [controller.signal];
   if (signal) {
@@ -100,10 +100,10 @@ export async function downloadCertificate(
   } catch (err: any) {
     clearTimeout(timeout);
     if (err?.name === "AbortError") {
-      throw new ApiError(499, "Запрос отменён (timeout/abort)");
+      throw new ApiError(499, "Сұрау тоқтатылды (timeout/abort)");
     }
     if (err instanceof ApiError) throw err;
-    throw new ApiError(0, err?.message || "Сетевая ошибка", err);
+    throw new ApiError(0, err?.message || "Желілік қате", err);
   }
 }
 

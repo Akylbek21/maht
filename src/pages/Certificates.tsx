@@ -51,14 +51,14 @@ export default function CertificatesPage() {
   const [results, setResults] = React.useState<Registration[]>([]);
   const [downloadingId, setDownloadingId] = React.useState<number | null>(null);
 
-  // Форма поиска
+  // Іздеу формасы
   const [lastName, setLastName] = React.useState("");
   const [firstName, setFirstName] = React.useState("");
   const [fullName, setFullName] = React.useState("");
   const [iin, setIin] = React.useState("");
   const [phone, setPhone] = React.useState("");
 
-  // Поиск
+  // Іздеу
   const handleSearch = React.useCallback(async () => {
     setLoading(true);
     setError(null);
@@ -74,20 +74,20 @@ export default function CertificatesPage() {
           params.lastName = lastName.trim();
           params.firstName = firstName.trim();
         } else {
-          setError("Введите фамилию и имя или полное имя");
+          setError("Тегі мен есімін немесе толық аты-жөнін енгізіңіз");
           setLoading(false);
           return;
         }
       } else if (activeTab === "iin") {
         if (!iin.trim()) {
-          setError("Введите ИИН");
+          setError("ЖСН енгізіңіз");
           setLoading(false);
           return;
         }
         params.iin = iin.trim();
       } else if (activeTab === "phone") {
         if (!phone.trim()) {
-          setError("Введите номер телефона");
+          setError("Телефон номерін енгізіңіз");
           setLoading(false);
           return;
         }
@@ -99,17 +99,17 @@ export default function CertificatesPage() {
       setResults(registrations);
       
       if (registrations.length === 0) {
-        setError("Регистрация не найдена");
+        setError("Тіркелгі табылмады");
       }
     } catch (err: any) {
-      setError(err?.message || "Ошибка при поиске");
+      setError(err?.message || "Іздеу кезінде қате");
       setResults([]);
     } finally {
       setLoading(false);
     }
   }, [activeTab, lastName, firstName, fullName, iin, phone]);
 
-  // Скачивание сертификата
+  // Сертификатты жүктеп алу
   const handleDownload = React.useCallback(async (id: number, studentName: string) => {
     setDownloadingId(id);
     try {
@@ -123,13 +123,13 @@ export default function CertificatesPage() {
       document.body.removeChild(a);
       URL.revokeObjectURL(url);
     } catch (err: any) {
-      setError(err?.message || "Ошибка при скачивании сертификата");
+      setError(err?.message || "Сертификатты жүктеп алу кезінде қате");
     } finally {
       setDownloadingId(null);
     }
   }, []);
 
-  // Очистка формы при смене таба
+  // Табты ауыстырғанда форманы тазалау
   React.useEffect(() => {
     setLastName("");
     setFirstName("");
@@ -142,7 +142,7 @@ export default function CertificatesPage() {
 
   return (
     <Container sx={{ py: { xs: 4, md: 6 } }}>
-      {/* Заголовок */}
+      {/* Тақырып */}
       <Stack alignItems="center" sx={{ mb: 3 }}>
         <Box
           component={motion.div}
@@ -160,7 +160,7 @@ export default function CertificatesPage() {
             boxShadow: "0 10px 30px rgba(250,92,68,.35)",
           }}
         >
-          Генерация сертификата
+          Сертификат алу
         </Box>
       </Stack>
 
@@ -211,28 +211,28 @@ export default function CertificatesPage() {
             <Tab
               icon={<PersonIcon />}
               iconPosition="start"
-              label="По имени"
+              label="Аты-жөні бойынша"
               value="name"
             />
             <Tab
               icon={<CreditCardIcon />}
               iconPosition="start"
-              label="По ИИН"
+              label="ЖСН бойынша"
               value="iin"
             />
             <Tab
               icon={<PhoneIcon />}
               iconPosition="start"
-              label="По телефону"
+              label="Телефон бойынша"
               value="phone"
             />
           </Tabs>
         </Box>
 
-        {/* Форма поиска */}
+        {/* Іздеу формасы */}
         <Box sx={{ p: { xs: 2, md: 3 } }}>
           <Stack spacing={2}>
-            {/* Поиск по имени */}
+            {/* Аты-жөні бойынша іздеу */}
             {activeTab === "name" && (
               <Stack spacing={2}>
                 <TextField
@@ -244,7 +244,7 @@ export default function CertificatesPage() {
                   onKeyPress={(e) => {
                     if (e.key === "Enter") handleSearch();
                   }}
-                  helperText="Или используйте отдельные поля ниже"
+                  helperText="Немесе төмендегі жеке өрістерді пайдаланыңыз"
                 />
                 <Stack direction={{ xs: "column", sm: "row" }} spacing={2}>
                   <TextField
@@ -271,7 +271,7 @@ export default function CertificatesPage() {
               </Stack>
             )}
 
-            {/* Поиск по ИИН */}
+            {/* ЖСН бойынша іздеу */}
             {activeTab === "iin" && (
               <TextField
                 fullWidth
@@ -286,7 +286,7 @@ export default function CertificatesPage() {
               />
             )}
 
-            {/* Поиск по телефону */}
+            {/* Телефон бойынша іздеу */}
             {activeTab === "phone" && (
               <TextField
                 fullWidth
@@ -300,7 +300,7 @@ export default function CertificatesPage() {
               />
             )}
 
-            {/* Кнопка поиска */}
+            {/* Іздеу батырмасы */}
             <Button
               variant="contained"
               size="large"
@@ -324,7 +324,7 @@ export default function CertificatesPage() {
                 },
               }}
             >
-              Найти
+              Іздеу
             </Button>
           </Stack>
         </Box>
@@ -348,7 +348,7 @@ export default function CertificatesPage() {
           <Box sx={{ px: { xs: 2, md: 3 }, pb: 3 }}>
             <Divider sx={{ mb: 2 }} />
             <Typography variant="h6" fontWeight={700} sx={{ mb: 2 }}>
-              Найдено: {results.length}
+              Табылды: {results.length}
             </Typography>
             <Stack spacing={2}>
               <AnimatePresence>
@@ -402,7 +402,7 @@ export default function CertificatesPage() {
                           </Typography>
                           {registration.iin && (
                             <Typography variant="body2">
-                              <strong>ИИН:</strong> {registration.iin}
+                              <strong>ЖСН:</strong> {registration.iin}
                             </Typography>
                           )}
                         </Stack>
