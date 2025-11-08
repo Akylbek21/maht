@@ -91,7 +91,12 @@ export default function CertificatesPage() {
           setLoading(false);
           return;
         }
-        params.phone = phone.trim();
+        let phoneNumber = phone.trim();
+        // Заменяем +7 на 8 для поиска в базе
+        if (phoneNumber.startsWith("+7")) {
+          phoneNumber = "8" + phoneNumber.substring(2);
+        }
+        params.phone = phoneNumber;
       }
 
       const data = await searchCertificates(params);
@@ -291,7 +296,7 @@ export default function CertificatesPage() {
               <TextField
                 fullWidth
                 label="Телефон номері"
-                placeholder="+77001234567"
+                placeholder="87001234567"
                 value={phone}
                 onChange={(e) => setPhone(e.target.value)}
                 onKeyPress={(e) => {
