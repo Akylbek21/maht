@@ -237,8 +237,8 @@ export default function CertificatesPage() {
               <Stack spacing={2}>
                 <TextField
                   fullWidth
-                  label="Полное имя (фамилия и имя)"
-                  placeholder="Иванов Иван"
+                  label="Толық аты-жөні"
+                  placeholder="Аты-жөні"
                   value={fullName}
                   onChange={(e) => setFullName(e.target.value)}
                   onKeyPress={(e) => {
@@ -249,8 +249,8 @@ export default function CertificatesPage() {
                 <Stack direction={{ xs: "column", sm: "row" }} spacing={2}>
                   <TextField
                     fullWidth
-                    label="Фамилия"
-                    placeholder="Иванов"
+                    label="Тегі"
+                    placeholder="Тегі"
                     value={lastName}
                     onChange={(e) => setLastName(e.target.value)}
                     onKeyPress={(e) => {
@@ -259,8 +259,8 @@ export default function CertificatesPage() {
                   />
                   <TextField
                     fullWidth
-                    label="Имя"
-                    placeholder="Иван"
+                    label="Есімі"
+                    placeholder="Есімі"
                     value={firstName}
                     onChange={(e) => setFirstName(e.target.value)}
                     onKeyPress={(e) => {
@@ -275,7 +275,7 @@ export default function CertificatesPage() {
             {activeTab === "iin" && (
               <TextField
                 fullWidth
-                label="ИИН"
+                label="ЖСН"
                 placeholder="123456789012"
                 value={iin}
                 onChange={(e) => setIin(e.target.value)}
@@ -290,7 +290,7 @@ export default function CertificatesPage() {
             {activeTab === "phone" && (
               <TextField
                 fullWidth
-                label="Номер телефона"
+                label="Телефон номері"
                 placeholder="+77001234567"
                 value={phone}
                 onChange={(e) => setPhone(e.target.value)}
@@ -429,7 +429,7 @@ export default function CertificatesPage() {
                             },
                           }}
                         >
-                          {downloadingId === registration.id ? "Скачивание..." : "Скачать сертификат"}
+                          {downloadingId === registration.id ? "Жүктелуде..." : "Сертификатты жүктеп алу"}
                         </Button>
                       </Stack>
                     </CardContent>
@@ -443,4 +443,3 @@ export default function CertificatesPage() {
     </Container>
   );
 }
-
