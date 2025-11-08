@@ -395,9 +395,6 @@ export default function CertificatesPage() {
                             <strong>Ата-ана:</strong> {registration.parentFullName}
                           </Typography>
                           <Typography variant="body2">
-                            <strong>Телефон:</strong> {registration.studentPhone}
-                          </Typography>
-                          <Typography variant="body2">
                             <strong>Қала:</strong> {registration.city || "—"}
                           </Typography>
                           {registration.iin && (
